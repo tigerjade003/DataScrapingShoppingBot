@@ -1,4 +1,4 @@
-# DataScrapingSchoppingBot
+# DataScrapingShoppingBot
 A Bot that will periodically check websites, and hold items in carts for you. It will also notify you when your price reaches a certain price point.
 
 In order to set it up, you will need to create a .env file.
