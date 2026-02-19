@@ -1,5 +1,6 @@
 import asyncio
 import discord
+from discord import app_commands
 import threading
 import os
 from dotenv import load_dotenv
@@ -10,11 +11,25 @@ USER_ID = os.getenv("USER_ID")
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
+tree = app_commands.CommandTree(client)
 loop = asyncio.new_event_loop()
 
 @client.event
 async def on_ready():
+    await tree.sync()
     print(f"Bot is online as {client.user}")
+
+@tree.command(name="add_pricewatch", description="Add a price watch for a product")
+@app_commands.describe(
+    link="The product URL to track",
+    goal_price="Optional target price to alert you at"
+)
+async def add_pricewatch(interaction: discord.Interaction, link: str, goal_price: float = None):
+    if goal_price is None:
+        await interaction.response.send_message(f"Tracking {link} with no price goal!")
+    else:
+        await interaction.response.send_message(f"Tracking {link} — will alert when below ${goal_price}!")
+    
 
 async def notify(message: str):
     channel = discord.utils.get(client.get_all_channels(), name="bot-test")
@@ -23,13 +38,13 @@ async def notify(message: str):
     else:
         print("Channel #bot-test not found!")
 
-def check_event(name, price, goal):
+def check_event(name, price, goal, url):
     print(name)
     print(price)
     print(goal)
     if price < goal:
         asyncio.run_coroutine_threadsafe(
-            notify(f"{name} is now ${str(price)}! Your goal price was ${str(float(goal))}."),
+            notify(f"{name} is now ${str(price)}! Your goal price was ${str(float(goal))}. URL: {url}"),
             loop
         )
 
