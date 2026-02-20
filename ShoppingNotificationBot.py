@@ -4,6 +4,7 @@ from discord import app_commands
 import threading
 import os
 from dotenv import load_dotenv
+import constantshoppingupdate
 
 load_dotenv()
 BOT_TOKEN = os.getenv("DISCORD_TOKEN")
@@ -26,7 +27,7 @@ async def on_ready():
 )
 async def add_pricewatch(interaction: discord.Interaction, link: str, goal_price: float = None):
     if goal_price is None:
-        await interaction.response.send_message(f"Tracking {link} with no price goal!")
+        await interaction.response.send_message(f"Tracking {link} with no the current price at ${constantshoppingupdate.get_price(link)} — will alert on any price drop!")
     else:
         await interaction.response.send_message(f"Tracking {link} — will alert when below ${goal_price}!")
     

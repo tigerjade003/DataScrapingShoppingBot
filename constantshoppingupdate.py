@@ -9,7 +9,8 @@ import json
 import ShoppingNotificationBot
 
 chrome_options = uc.ChromeOptions()
-#chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless")
+# these are for additional secrecy when the scraper goes and looks at prices. - if it cannot find the price or name, uncomment these. 
 #chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
 #chrome_options.add_argument("--disable-blink-features=AutomationControlled")
 
@@ -20,8 +21,12 @@ WebDriverWait(driver, 10).until(
     EC.presence_of_element_located((By.TAG_NAME, "body"))
 )
 soup = BeautifulSoup(driver.page_source, "html.parser")
-
 scripts = soup.find_all("script", {"type": "application/ld+json"})
+
+for i, script in enumerate(scripts):
+    print(f"--- Block {i} ---")
+    data = json.loads(script.string)
+    print(json.dumps(data, indent=2))
 def get_price(url):
     driver.get(url)
     WebDriverWait(driver, 10).until(
