@@ -14,7 +14,7 @@ def get_data(url, sku, open_box_condition=None):
     # Get fresh cookies including vt and basketTimestamp
     home_response = session.get('https://www.bestbuy.com')
     vt = home_response.cookies.get('vt')
-    cart_timestamp = home_response.cookies.get('basketTimestamp')
+    #cart_timestamp = home_response.cookies.get('basketTimestamp')
     time.sleep(2)
 
 
