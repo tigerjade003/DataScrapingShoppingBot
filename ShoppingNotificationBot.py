@@ -33,6 +33,50 @@ async def add_pricewatch(interaction: discord.Interaction, link: str, goal_price
     db.insert_product(url=link, wanted_price=str(goal_price))
         
     
+@tree.command(name="list_pricewatches", description="List all your active price watches")
+async def list_pricewatches(interaction: discord.Interaction):
+    products = db.get_all_products()
+
+    if not products:
+        await interaction.response.send_message("You have no active price watches.")
+        return
+
+    lines = []
+    for p in products:
+        name = p["name"] or "Unknown Product"
+        current = p["price"] or "N/A"
+        wanted = p["wanted_price"] or "N/A"
+        url = p["url"] or ""
+        sku = p["sku"]
+
+        current_display = f"${current}" if current != "N/A" else "N/A"
+        wanted_display = f"${wanted}" if wanted != "N/A" else "N/A"
+
+        lines.append(
+            f"**{name}**\n" 
+            f"  SKU: `{sku}` | Current: {current_display} | Goal: {wanted_display}\n"
+            f"  {url}"
+        )
+
+    # Discord messages max out at 2000 chars, so chunk if needed
+    message = "\n\n".join(lines)
+    if len(message) <= 2000:
+        await interaction.response.send_message(message)
+    else:
+        chunks = []
+        current_chunk = ""
+        for line in lines:
+            if len(current_chunk) + len(line) + 2 > 2000:
+                chunks.append(current_chunk)
+                current_chunk = line
+            else:
+                current_chunk += ("\n\n" if current_chunk else "") + line
+        if current_chunk:
+            chunks.append(current_chunk)
+
+        await interaction.response.send_message(chunks[0])
+        for chunk in chunks[1:]:
+            await interaction.followup.send(chunk)
 
 async def notify(message: str):
     channel = discord.utils.get(client.get_all_channels(), name="bot-test")
