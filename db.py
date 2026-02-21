@@ -5,7 +5,8 @@ Run this once to initialize the DB, then use the helper functions to insert/upda
 
 import sqlite3
 from datetime import datetime
-import 
+import getOpenBox
+import getitemData
 
 DB_PATH = "bestbuy_scraper.db"
 
@@ -40,19 +41,24 @@ def init_db():
     print(f"Database initialized at {DB_PATH}")
 
 
-# ── Helper functions ──────────────────────────────────────────────────────────
+def insert(url=None, goalPrice=None):
+    sku = sku=url.split("/sku/")[1].split("/")[0]
+    name = getitemData.get_data(url)[0]
+    curprice = getitemData.get_data(url)[1]
+    insert_product(sku=sku, name=name, url=url, price=str(curprice), wanted_price=str(goalPrice))
 
-def insert_product(sku, name=None, url=None, category=None, brand=None, model_number=None):
+def insert_product(sku, name=None, url=None, price=None, wanted_price=None):
     conn = get_conn()
     conn.execute("""
-        INSERT INTO products (sku, name, url, category, brand, model_number)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO products (sku, name, url, price, wanted_price)
+        VALUES (?, ?, ?, ?, ?)
         ON CONFLICT(sku) DO UPDATE SET
             name         = COALESCE(excluded.name, name),
             url          = COALESCE(excluded.url, url),
             price        = COALESCE(excluded.price, price),
+            wanted_price = COALESCE(excluded.wanted_price, wanted_price),
             updated_at   = datetime('now')
-    """, (sku, name, url, category, brand, model_number))
+    """, (sku, name, url, price, wanted_price))
     conn.commit()
     conn.close()
 
@@ -76,18 +82,10 @@ def get_all_products():
     return [dict(r) for r in rows]
 
 
-# ── Example usage ─────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     init_db()
-
-    insert_product(
-        sku="6575391",
-        name='Samsung 65" 4K QLED TV',
+    insert(
         url="https://www.bestbuy.com/product/lenovo-legion-7i-16-2-5k-lcd-gaming-laptop-intel-14th-gen-core-i7-with-16gb-memory-nvidia-geforce-rtx-4060-8gb-1tb-ssd-glacier-white/JJGYCCVGWJ/sku/6575391/openbox?condition=fair",
-        category="TVs",
-        brand="Samsung",
-        model_number="QN65Q80C"
     )
-    print(get_latest_price("6575391"))
     print(get_all_products())

@@ -37,7 +37,7 @@ def get_data(url):
     json_data = {
         'operationName': 'getPDPProductBySkuId',
         'variables': {
-            'skuId': '6575391',
+            'skuId': f'{url.split("/sku/")[1].split("/")[0]}',
         },
         'query': 'query getPDPProductBySkuId($skuId: String!) {\n  productBySkuId(skuId: $skuId) {\n    brand\n    hierarchy {\n      bbypres {\n        primary\n        id\n        categoryDetail {\n          name\n          broaderTerms {\n            primaryLineage {\n              id\n              name\n              sequence\n              __typename\n            }\n            __typename\n          }\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    name {\n      short\n      __typename\n    }\n    price(input: {salesChannel: "www"}) {\n      currentPrice\n      __typename\n    }\n    reviewInfo {\n      averageRating\n      __typename\n    }\n    __typename\n    skuId\n    openBoxCondition\n  }\n}',
     }
@@ -52,5 +52,6 @@ def get_data(url):
     price = product['price']['currentPrice']
     print(f"Product: {name}")
     print(f"Price: ${price}")
+    return name, price
 
 get_data("https://www.bestbuy.com/product/lenovo-legion-7i-16-2-5k-lcd-gaming-laptop-intel-14th-gen-core-i7-with-16gb-memory-nvidia-geforce-rtx-4060-8gb-1tb-ssd-glacier-white/JJGYCCVGWJ/sku/6575391/openbox?condition=fair")
