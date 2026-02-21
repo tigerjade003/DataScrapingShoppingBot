@@ -5,6 +5,7 @@ Run this once to initialize the DB, then use the helper functions to insert/upda
 
 import sqlite3
 from datetime import datetime
+import 
 
 DB_PATH = "bestbuy_scraper.db"
 

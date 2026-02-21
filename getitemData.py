@@ -37,7 +37,7 @@ def get_data(url):
     json_data = {
         'operationName': 'getPDPProductBySkuId',
         'variables': {
-            'skuId': '11925192',
+            'skuId': '6575391',
         },
         'query': 'query getPDPProductBySkuId($skuId: String!) {\n  productBySkuId(skuId: $skuId) {\n    brand\n    hierarchy {\n      bbypres {\n        primary\n        id\n        categoryDetail {\n          name\n          broaderTerms {\n            primaryLineage {\n              id\n              name\n              sequence\n              __typename\n            }\n            __typename\n          }\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    name {\n      short\n      __typename\n    }\n    price(input: {salesChannel: "www"}) {\n      currentPrice\n      __typename\n    }\n    reviewInfo {\n      averageRating\n      __typename\n    }\n    __typename\n    skuId\n    openBoxCondition\n  }\n}',
     }
@@ -53,4 +53,4 @@ def get_data(url):
     print(f"Product: {name}")
     print(f"Price: ${price}")
 
-get_data("https://www.bestbuy.com/product/lenovo-ideapad-slim-3-15-6-full-hd-touchscreen-laptop-amd-ryzen-7-5825u-2025-16gb-memory-512gb-ssd-arctic-grey/JJGSH2ZQWS")
+get_data("https://www.bestbuy.com/product/lenovo-legion-7i-16-2-5k-lcd-gaming-laptop-intel-14th-gen-core-i7-with-16gb-memory-nvidia-geforce-rtx-4060-8gb-1tb-ssd-glacier-white/JJGYCCVGWJ/sku/6575391/openbox?condition=fair")
