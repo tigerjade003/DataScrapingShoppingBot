@@ -39,7 +39,7 @@ def get_data(url, sku, open_box_condition=None):
         'x-client-id': 'pdp-web',
         'x-dynatrace': '',
         'x-requested-for-operation-name': 'getProduct',
-        'cookie': f'vt={vt}; basketTimestamp={cart_timestamp};'
+        'cookie': f'vt={vt};'
     }
 
     json_data = {
@@ -72,5 +72,6 @@ def get_data(url, sku, open_box_condition=None):
 get_data(
     url="https://www.bestbuy.com/product/lenovo-legion-7i-16-2-5k-lcd-gaming-laptop-intel-14th-gen-core-i7-with-16gb-memory-nvidia-geforce-rtx-4060-8gb-1tb-ssd-glacier-white/JJGYCCVGWJ/sku/6575391/openbox?condition=fair",
     sku="6575391",
+    # 0 = bad, 1 = fair, 2 = good
     open_box_condition=2
 )
