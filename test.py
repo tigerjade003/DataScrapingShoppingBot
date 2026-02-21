@@ -17,8 +17,6 @@ def get_data(url, sku, open_box_condition=None):
     cart_timestamp = home_response.cookies.get('basketTimestamp')
     time.sleep(2)
 
-    print(f"vt: {vt}")
-    print(f"cartTimestamp: {cart_timestamp}")
 
     headers = {
         'accept': '*/*',
@@ -39,7 +37,7 @@ def get_data(url, sku, open_box_condition=None):
         'x-client-id': 'pdp-web',
         'x-dynatrace': '',
         'x-requested-for-operation-name': 'getProduct',
-        'cookie': f'vt={vt};'
+        'cookie': 'vt={vt};'
     }
 
     json_data = {
