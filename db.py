@@ -49,8 +49,10 @@ def insert(url=None, goalPrice=None):
     sku = url.split("/sku/")[1].split("/")[0]  
     name = getOpenBox.get_data(url, sku)[0]
     openbox_prices = getOpenBox.get_data(url, sku)[1]
-    print(openbox_prices)
-    insert_product(sku=sku, name=name, url=url, openbox_fair=openbox_prices[0], openbox_good=openbox_prices[1], openbox_excellent=openbox_prices[2], price=openbox_prices[3], wanted_price=str(goalPrice))
+    #print(openbox_prices)
+    prices = min(openbox_prices[3], getitemData.get_data(url)[1]) if openbox_prices[3] != -1 else getitemData.get_data(url)[1]
+    print(prices)
+    insert_product(sku=sku, name=name, url=url, openbox_fair=openbox_prices[0], openbox_good=openbox_prices[1], openbox_excellent=openbox_prices[2], price=prices, wanted_price=str(goalPrice))
 
 def insert_product(sku, name=None, url=None, openbox_fair = None, openbox_good=None, openbox_excellent=None, price = None, wanted_price=None):
     conn = get_conn()
@@ -88,17 +90,17 @@ def refresh_all():
             url = product["url"]
             sku = product["sku"]
             new_prices = getOpenBox.get_data(url, sku)[1]
-
+            cur_price = min(new_prices[3], getitemData.get_data(url)[1]) if new_prices[3] != -1 else getitemData.get_data(url)[1]
             conn = get_conn()
             conn.execute("""
                 UPDATE products
                 SET openbox_fair = ?, openbox_good = ?, openbox_excellent = ?, price = ?, updated_at = datetime('now')
                 WHERE sku = ?
-            """, (str(new_prices[0]), str(new_prices[1]), str(new_prices[2]), str(new_prices[3]), sku))
+            """, (str(new_prices[0]), str(new_prices[1]), str(new_prices[2]), str(cur_price), sku))
             conn.commit()
             conn.close()
 
-            print(f"  ✓ {product['name']} → ${new_prices[3]}")
+            print(f"  ✓ {product['name']} → ${cur_price}")
         except Exception as e:
             print(f"  ✗ Failed to update SKU {product['sku']}: {e}")
 

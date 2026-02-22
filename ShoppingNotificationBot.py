@@ -4,7 +4,7 @@ from discord import app_commands
 import threading
 import os
 from dotenv import load_dotenv
-import constantshoppingupdate
+import getOpenBox
 import db
 
 load_dotenv()
@@ -27,12 +27,16 @@ async def on_ready():
     goal_price="Optional target price to alert you at"
 )
 async def add_pricewatch(interaction: discord.Interaction, link: str, goal_price: float = None):
+    await interaction.response.defer()
+    sku = link.split("/sku/")[1].split("/")[0]
+    name, prices = getOpenBox.get_data(link, sku)
+
     if goal_price is None:
-        goal_price = constantshoppingupdate.get_price(link)
-    await interaction.response.send_message(f"Tracking {link} — will alert when below ${goal_price}!")
-    db.insert_product(url=link, wanted_price=str(goal_price))
-        
-    
+        goal_price = prices[3]  # regular price as default
+    print("HI")
+    db.insert(url=link, goalPrice=goal_price)
+    await interaction.followup.send(f"Tracking **{name}** — will alert when below ${goal_price}!")
+
 @tree.command(name="list_pricewatches", description="List all your active price watches")
 async def list_pricewatches(interaction: discord.Interaction):
     products = db.get_all_products()
@@ -44,21 +48,21 @@ async def list_pricewatches(interaction: discord.Interaction):
     lines = []
     for p in products:
         name = p["name"] or "Unknown Product"
-        current = p["price"] or "N/A"
+        fair = p["openbox_fair"] or "N/A"
+        good = p["openbox_good"] or "N/A"
+        excellent = p["openbox_excellent"] or "N/A"
+        regular = p["price"] or "N/A"
         wanted = p["wanted_price"] or "N/A"
         url = p["url"] or ""
         sku = p["sku"]
 
-        current_display = f"${current}" if current != "N/A" else "N/A"
-        wanted_display = f"${wanted}" if wanted != "N/A" else "N/A"
-
         lines.append(
-            f"**{name}**\n" 
-            f"  SKU: `{sku}` | Current: {current_display} | Goal: {wanted_display}\n"
+            f"**{name}** — SKU: `{sku}`\n"
+            f"  Fair: ${fair} | Good: ${good} | Excellent: ${excellent} | Regular: ${regular}\n"
+            f"  Goal: ${wanted}\n"
             f"  {url}"
         )
 
-    # Discord messages max out at 2000 chars, so chunk if needed
     message = "\n\n".join(lines)
     if len(message) <= 2000:
         await interaction.response.send_message(message)
@@ -86,19 +90,22 @@ async def notify(message: str):
         print("Channel #bot-test not found!")
 
 def check_event(name, price, goal, url):
-    print(name)
-    print(price)
-    print(goal)
     if price < goal:
         asyncio.run_coroutine_threadsafe(
             notify(f"{name} is now ${str(price)}! Your goal price was ${str(float(goal))}. URL: {url}"),
             loop
         )
 
-def start_bot():
+def start_scraper():
+    db.init_db()
+    while True:
+        db.refresh_all()
+        import time
+        time.sleep(db.REFRESH_INTERVAL)
+
+if __name__ == "__main__":
+    scraper_thread = threading.Thread(target=start_scraper, daemon=True)
+    scraper_thread.start()
+
     asyncio.set_event_loop(loop)
     loop.run_until_complete(client.start(BOT_TOKEN))
-
-# Start bot in background thread when imported
-thread = threading.Thread(target=start_bot, daemon=True)
-thread.start()

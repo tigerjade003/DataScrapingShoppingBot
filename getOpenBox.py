@@ -73,9 +73,3 @@ def get_data(url, sku):
 
         time.sleep(0.2)  # small delay between requests
     return name, all_data
-
-
-print(get_data(
-    url="https://www.bestbuy.com/product/lenovo-legion-7i-16-2-5k-lcd-gaming-laptop-intel-14th-gen-core-i7-with-16gb-memory-nvidia-geforce-rtx-4060-8gb-1tb-ssd-glacier-white/JJGYCCVGWJ/sku/6575391/openbox?condition=fair",
-    sku="6575391",
-))
