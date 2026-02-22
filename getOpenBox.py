@@ -1,22 +1,15 @@
-#from curl_cffi import requests
-from httpx import requests
-"""
-# These are for Curl_CFFI
+from curl_cffi import requests
+import time
+
 IMPERSONATE = "chrome"
 USER_AGENTS = {
     "chrome120": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "chrome110": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
     "chrome": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
 }
-"""
-
-def get_data(url, sku, open_box_condition=None):
-    session = requests.Session(impersonate=IMPERSONATE)
-    
-    # Get fresh cookies including vt and basketTimestamp
-    home_response = session.get('https://www.bestbuy.com')
 
 
+def fetch_condition(session, url, sku, vt, condition):
     headers = {
         'accept': '*/*',
         'accept-language': 'en-US,en;q=0.9,zh;q=0.8',
@@ -36,14 +29,13 @@ def get_data(url, sku, open_box_condition=None):
         'x-client-id': 'pdp-web',
         'x-dynatrace': '',
         'x-requested-for-operation-name': 'getProduct',
-        'cookie': 'vt={vt};'
     }
 
     json_data = {
         'operationName': 'getProduct',
         'variables': {
             'skuId': sku,
-            'openBoxCondition': open_box_condition,
+            'openBoxCondition': condition,
         },
         'query': f'query getProduct($skuId: String!, $openBoxCondition: Int) {{\n  productBySkuId(skuId: $skuId, openBoxCondition: $openBoxCondition) {{\n    ...priceXProductFragment\n    __typename\n    skuId\n    openBoxCondition\n  }}\n}}\n\nfragment priceXProductFragment on Product {{\n  skuId\n  name {{\n    short\n    __typename\n  }}\n  price(\n    input: {{salesChannel: "LargeView", usePriceWithCart: true, cartTimestamp: "1771475979748", visitorId: "{vt}", useCabo: true, useSuco: true}}\n  ) {{\n    __typename\n    openBoxPrice\n    openBoxSavings\n    openBoxCondition\n    lowestOpenboxPrice\n    displayableCustomerPrice\n    displayableRegularPrice\n    totalSavings\n    totalSavingsPercent\n  }}\n  __typename\n  openBoxCondition\n}}',
     }
@@ -53,22 +45,37 @@ def get_data(url, sku, open_box_condition=None):
         json=json_data,
         headers=headers,
     )
+    return response.json()
 
-    data = response.json()
-    product = data['data']['productBySkuId']
-    name = product['name']['short']
-    price = product['price']
 
-    print(f"Product: {name}")
-    print(f"Open Box Condition: {product['openBoxCondition']}")
-    print(f"Open Box Price: ${price['openBoxPrice']}")
-    print(f"Open Box Savings: ${price['openBoxSavings']}")
-    print(f"Lowest Open Box Price: ${price['lowestOpenboxPrice']}")
-    print(f"Regular Price: {price['displayableRegularPrice']}")
+def get_data(url, sku):
+    session = requests.Session(impersonate=IMPERSONATE)
+    all_data = [-1, -1, -1, -1]
+    home_response = session.get('https://www.bestbuy.com')
+    vt = home_response.cookies.get('vt')
+    time.sleep(2)
+    name = None
+    for condition in range(0, 3): # 0 = Fair, 1 = Good, 2 = Like New
+        try:
+            data = fetch_condition(session, url, sku, vt, condition)
+            product = data['data']['productBySkuId']
 
-get_data(
+            if product is None:
+                continue
+            if name is None:
+                name = product['name']['short']
+            if all_data[3] == -1:
+                all_data[3] = product['price']['displayableRegularPrice']
+            price = product['price']
+            all_data[condition] = price['openBoxPrice']
+        except Exception as e:
+            print(f"\n[{condition}] Failed to fetch: {e}")
+
+        time.sleep(0.2)  # small delay between requests
+    return name, all_data
+
+
+print(get_data(
     url="https://www.bestbuy.com/product/lenovo-legion-7i-16-2-5k-lcd-gaming-laptop-intel-14th-gen-core-i7-with-16gb-memory-nvidia-geforce-rtx-4060-8gb-1tb-ssd-glacier-white/JJGYCCVGWJ/sku/6575391/openbox?condition=fair",
     sku="6575391",
-    # 0 = bad, 1 = fair, 2 = good
-    open_box_condition=2
-)
+))
