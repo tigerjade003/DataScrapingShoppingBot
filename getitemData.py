@@ -33,7 +33,7 @@ def get_data(url):
         'x-requested-for-operation-name': 'getPDPProductBySkuId',
         'cookie': f'vt={vt};'
     }
-    print(vt)
+    #print(vt)
     json_data = {
         'operationName': 'getPDPProductBySkuId',
         'variables': {

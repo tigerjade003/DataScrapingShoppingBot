@@ -30,7 +30,7 @@ def init_db():
             sku           TEXT UNIQUE NOT NULL,
             url           TEXT,
             name          TEXT,
-            openbox_poor  TEXT,
+            openbox_fair  TEXT,
             openbox_good  TEXT,
             openbox_excellent TEXT,
             price         TEXT,
@@ -46,24 +46,27 @@ def init_db():
 
 
 def insert(url=None, goalPrice=None):
-    sku = url.split("/sku/")[1].split("/")[0]
-    name = getitemData.get_data(url)[0]
-    curprice = getitemData.get_data(url)[1]
-    insert_product(sku=sku, name=name, url=url, price=str(curprice), wanted_price=str(goalPrice))
+    sku = url.split("/sku/")[1].split("/")[0]  
+    name = getOpenBox.get_data(url, sku)[0]
+    openbox_prices = getOpenBox.get_data(url, sku)[1]
+    print(openbox_prices)
+    insert_product(sku=sku, name=name, url=url, openbox_fair=openbox_prices[0], openbox_good=openbox_prices[1], openbox_excellent=openbox_prices[2], price=openbox_prices[3], wanted_price=str(goalPrice))
 
-
-def insert_product(sku, name=None, url=None, price=None, wanted_price=None):
+def insert_product(sku, name=None, url=None, openbox_fair = None, openbox_good=None, openbox_excellent=None, price = None, wanted_price=None):
     conn = get_conn()
     conn.execute("""
-        INSERT INTO products (sku, name, url, price, wanted_price)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO products (sku, name, url, openbox_fair, openbox_good, openbox_excellent, price, wanted_price)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(sku) DO UPDATE SET
             name         = COALESCE(excluded.name, name),
             url          = COALESCE(excluded.url, url),
+            openbox_fair = COALESCE(excluded.openbox_fair, openbox_fair),
+            openbox_good = COALESCE(excluded.openbox_good, openbox_good),
+            openbox_excellent = COALESCE(excluded.openbox_excellent, openbox_excellent),
             price        = COALESCE(excluded.price, price),
             wanted_price = COALESCE(excluded.wanted_price, wanted_price),
             updated_at   = datetime('now')
-    """, (sku, name, url, price, wanted_price))
+    """, (sku, name, url, openbox_fair, openbox_good, openbox_excellent, price, wanted_price))
     conn.commit()
     conn.close()
 
@@ -84,18 +87,18 @@ def refresh_all():
         try:
             url = product["url"]
             sku = product["sku"]
-            new_price = getitemData.get_data(url)[1]
+            new_prices = getOpenBox.get_data(url, sku)[1]
 
             conn = get_conn()
             conn.execute("""
                 UPDATE products
-                SET price = ?, updated_at = datetime('now')
+                SET openbox_fair = ?, openbox_good = ?, openbox_excellent = ?, price = ?, updated_at = datetime('now')
                 WHERE sku = ?
-            """, (str(new_price), sku))
+            """, (str(new_prices[0]), str(new_prices[1]), str(new_prices[2]), str(new_prices[3]), sku))
             conn.commit()
             conn.close()
 
-            print(f"  ✓ {product['name']} → ${new_price}")
+            print(f"  ✓ {product['name']} → ${new_prices[3]}")
         except Exception as e:
             print(f"  ✗ Failed to update SKU {product['sku']}: {e}")
 
@@ -104,11 +107,10 @@ if __name__ == "__main__":
     init_db()
 
     # Add products you want to track here
-    """
     insert(
         url="https://www.bestbuy.com/product/lenovo-legion-7i-16-2-5k-lcd-gaming-laptop-intel-14th-gen-core-i7-with-16gb-memory-nvidia-geforce-rtx-4060-8gb-1tb-ssd-glacier-white/JJGYCCVGWJ/sku/6575391/openbox?condition=fair",
     )
-"""
+
     # Run refresh loop forever
     while True:
         refresh_all()
