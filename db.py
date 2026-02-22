@@ -1,8 +1,3 @@
-"""
-Best Buy Scraper - SQLite Database Setup
-Run this once to initialize the DB, then use the helper functions to insert/update records.
-"""
-
 import sqlite3
 import time
 from datetime import datetime
@@ -10,7 +5,7 @@ import getOpenBox
 import getitemData
 
 DB_PATH = "bestbuy_scraper.db"
-REFRESH_INTERVAL = 10 * 60  # 10 minutes in seconds
+REFRESH_INTERVAL = 10 * 60
 
 
 def get_conn():
@@ -20,7 +15,6 @@ def get_conn():
 
 
 def init_db():
-    """Create all tables. Safe to run multiple times."""
     conn = get_conn()
     c = conn.cursor()
 
@@ -49,7 +43,6 @@ def insert(url=None, goalPrice=None):
     sku = url.split("/sku/")[1].split("/")[0]  
     name = getOpenBox.get_data(url, sku)[0]
     openbox_prices = getOpenBox.get_data(url, sku)[1]
-    #print(openbox_prices)
     prices = min(openbox_prices[3], getitemData.get_data(url)[1]) if openbox_prices[3] != -1 else getitemData.get_data(url)[1]
     print(prices)
     insert_product(sku=sku, name=name, url=url, openbox_fair=openbox_prices[0], openbox_good=openbox_prices[1], openbox_excellent=openbox_prices[2], price=prices, wanted_price=str(goalPrice))
@@ -81,7 +74,6 @@ def get_all_products():
 
 
 def refresh_all():
-    """Re-scrape every product in the DB and update its price."""
     products = get_all_products()
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Refreshing {len(products)} product(s)...")
 
@@ -107,13 +99,9 @@ def refresh_all():
 
 if __name__ == "__main__":
     init_db()
-
-    # Add products you want to track here
     insert(
         url="https://www.bestbuy.com/product/lenovo-legion-7i-16-2-5k-lcd-gaming-laptop-intel-14th-gen-core-i7-with-16gb-memory-nvidia-geforce-rtx-4060-8gb-1tb-ssd-glacier-white/JJGYCCVGWJ/sku/6575391/openbox?condition=fair",
     )
-
-    # Run refresh loop forever
     while True:
         refresh_all()
         time.sleep(REFRESH_INTERVAL)
