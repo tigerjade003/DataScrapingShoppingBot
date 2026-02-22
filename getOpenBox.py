@@ -73,3 +73,9 @@ def get_data(url, sku):
 
         time.sleep(0.2)  # small delay between requests
     return name, all_data
+
+
+print(get_data(
+    url="https://www.bestbuy.com/product/apple-macbook-pro-16-laptop-m2-pro-chip-16gb-memory-512gb-ssd-space-gray/JJ8ZHRS9KS/sku/6530623",
+    sku="6530623",
+))
