@@ -29,6 +29,9 @@ async def on_ready():
 async def add_pricewatch(interaction: discord.Interaction, link: str, goal_price: float = None):
     await interaction.response.defer()
     sku = link.split("/sku/")[1].split("/")[0]
+    if sku is None:
+        await interaction.followup.send("Invalid URL format. Please provide a valid Best Buy product URL that contains the SKU in the link.")
+        return
     name, prices = getOpenBox.get_data(link, sku)
 
     if goal_price is None:
