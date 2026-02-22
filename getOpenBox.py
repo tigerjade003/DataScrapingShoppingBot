@@ -1,21 +1,20 @@
-from curl_cffi import requests
-import time
-
+#from curl_cffi import requests
+from httpx import requests
+"""
+# These are for Curl_CFFI
 IMPERSONATE = "chrome"
 USER_AGENTS = {
     "chrome120": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "chrome110": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
     "chrome": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
 }
+"""
 
 def get_data(url, sku, open_box_condition=None):
     session = requests.Session(impersonate=IMPERSONATE)
     
     # Get fresh cookies including vt and basketTimestamp
     home_response = session.get('https://www.bestbuy.com')
-    vt = home_response.cookies.get('vt')
-    #cart_timestamp = home_response.cookies.get('basketTimestamp')
-    time.sleep(2)
 
 
     headers = {
